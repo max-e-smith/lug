@@ -60,7 +60,7 @@ func init() {
 func download(surveys []string, path string) {
 
 	if bathy {
-		fmt.Println("resolving bathymetry data for provided surveys: {}", surveys)
+		fmt.Println("resolving bathymetry data for provided surveys: ", surveys)
 		var surveyRoots []string = resolveBathySurveys(surveys)
 
 		fmt.Println("checking available disk space")
@@ -90,6 +90,7 @@ func diskSpaceCheck(rootPaths []string) {
 func resolveBathySurveys(surveys []string) []string {
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
+		config.WithRegion("us-east-1"),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -98,19 +99,25 @@ func resolveBathySurveys(surveys []string) []string {
 
 	client := s3.NewFromConfig(cfg)
 
-	bucket := "noaa.dcdb-bathymetry-pds.s3.amazonaws.com"
+	// noaa-dcdb-bathymetry-pds.s3.amazonaws.com
+	bucket := "noaa-dcdb-bathymetry-pds"
 
-	output, err := client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
-		Bucket: aws.String(bucket),
+	result, err := client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket:    aws.String(bucket),
+		Prefix:    aws.String("mb/ships/"),
+		Delimiter: aws.String("/"),
 	})
 	if err != nil {
 		log.Fatal(err)
 		return []string{}
 	}
 
-	log.Println("first page results")
-	for _, object := range output.Contents {
-		log.Printf("key=%s size=%d", aws.ToString(object.Key), *object.Size)
+	log.Println("first page results:")
+	//for _, object := range result.Contents {
+	//	log.Printf("key=%s size=%d", aws.ToString(object.Key), *object.Size)
+	//}
+	for _, platform := range result.CommonPrefixes {
+		fmt.Printf(" - %s\n", *platform.Prefix)
 	}
 
 	var paths []string
