@@ -24,6 +24,7 @@ var getCmd = &cobra.Command{
 		if length <= 1 {
 			fmt.Println("Please specify survey name(s) and a target file path.")
 			fmt.Println(cmd.UsageString())
+			return
 		}
 
 		var path = args[length-1]
