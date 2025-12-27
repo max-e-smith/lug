@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/max-e-smith/cruise-lug/cmd"
 	"github.com/max-e-smith/cruise-lug/cmd/common"
-	"github.com/max-e-smith/cruise-lug/cmd/gets/dcdb"
+	"github.com/max-e-smith/cruise-lug/cmd/gets/cruise"
 	"github.com/spf13/cobra"
 )
 
