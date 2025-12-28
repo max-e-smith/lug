@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/spf13/viper"
 	"log"
 	"path"
 	"sync"
@@ -88,7 +89,7 @@ func (order Order) DownloadFiles() error {
 				}
 			}
 		}
-		fmt.Println("files downloaded.")
+		fmt.Println("  files downloaded.")
 	}
 
 	close(downloads)
@@ -125,6 +126,9 @@ func downloadLargeObject(bucket string, objectKey string, client s3.Client, targ
 		return
 	}
 
-	fmt.Printf("Successfully downloaded %g GB to %s in %g minutes.\n", ByteToGB(n), targetFile, MinutesSince(start))
+	if viper.GetBool("verbose") {
+		fmt.Printf("Successfully downloaded %g GB to %s in %g minutes.\n", ByteToGB(n), targetFile, MinutesSince(start))
+	}
+
 	return
 }
