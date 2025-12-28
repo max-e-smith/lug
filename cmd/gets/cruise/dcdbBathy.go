@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var Bucket = "noaa-dcdb-bathymetry-pds" // https://noaa-dcdb-bathymetry-pds.s3.amazonaws.com/index.html
+var BathyBucket = "noaa-dcdb-bathymetry-pds" // https://noaa-dcdb-bathymetry-pds.s3.amazonaws.com/index.html
 
 type MultibeamRequest struct {
 	Surveys     []string
@@ -33,7 +33,7 @@ func (request MultibeamRequest) ResolveSurveys() ([]string, error) {
 	foundSurveys := 0
 
 	pt, ptErr := request.S3Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
-		Bucket:    aws.String(Bucket),
+		Bucket:    aws.String(BathyBucket),
 		Prefix:    aws.String("mb/"),
 		Delimiter: aws.String("/"),
 	})
@@ -45,7 +45,7 @@ func (request MultibeamRequest) ResolveSurveys() ([]string, error) {
 	for _, platformType := range pt.CommonPrefixes {
 
 		platformParams := &s3.ListObjectsV2Input{
-			Bucket:    aws.String(Bucket),
+			Bucket:    aws.String(BathyBucket),
 			Prefix:    aws.String(*platformType.Prefix),
 			Delimiter: aws.String("/"),
 		}
@@ -63,7 +63,7 @@ func (request MultibeamRequest) ResolveSurveys() ([]string, error) {
 				fmt.Printf("  searching %s\n", *platform.Prefix)
 
 				platformParams := &s3.ListObjectsV2Input{
-					Bucket:    aws.String(Bucket),
+					Bucket:    aws.String(BathyBucket),
 					Prefix:    aws.String(*platform.Prefix),
 					Delimiter: aws.String("/"),
 				}
@@ -107,7 +107,7 @@ func (request MultibeamRequest) ResolveSurveys() ([]string, error) {
 }
 
 func (request MultibeamRequest) CheckDiskAvailability() error {
-	bytes, estimateErr := common.GetDiskUsageEstimate(Bucket, request.S3Client, request.Prefixes)
+	bytes, estimateErr := common.GetDiskUsageEstimate(BathyBucket, request.S3Client, request.Prefixes)
 	if estimateErr != nil {
 		return fmt.Errorf("unable to get disk usage estimate from s3 bucket: %w", estimateErr)
 	}
@@ -120,7 +120,7 @@ func (request MultibeamRequest) DownloadSurveys() error {
 	defer logDownloadTime(start)
 
 	order := common.Order{
-		Bucket:      Bucket,
+		Bucket:      BathyBucket,
 		Prefixes:    request.Prefixes,
 		Client:      request.S3Client,
 		TargetDir:   request.TargetDir,
