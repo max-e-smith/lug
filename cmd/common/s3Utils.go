@@ -16,7 +16,7 @@ func GetDiskUsageEstimate(bucket string, s3client s3.Client, rootPaths []string)
 	var totalSurveysSize int64 = 0
 
 	for _, surveyRootPath := range rootPaths {
-		fmt.Printf("Getting disk usage estimate for %s on s3 bucket %s\n", surveyRootPath, bucket)
+		fmt.Printf("Getting disk usage estimate for s3 files on %s at %s\n", bucket, surveyRootPath)
 		// TODO paginate
 		result, err := s3client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
 			Bucket: aws.String(bucket),
@@ -43,40 +43,68 @@ type Order struct {
 	WorkerCount int
 }
 
-func (manifest Order) DownloadFiles() error {
-	fmt.Printf("Downloading files to %s...\n", manifest.TargetDir)
-	for _, survey := range manifest.Prefixes {
-		var fileDownloadPageSize int32 = 10
+type Download struct {
+	Bucket     string
+	ObjectKey  string
+	TargetFile string
+	Client     s3.Client
+	WaitGroup  *sync.WaitGroup
+}
+
+func (order Order) DownloadFiles() error {
+	fmt.Printf("Downloading files to %s...\n", order.TargetDir)
+
+	var wg sync.WaitGroup
+	downloads := make(chan Download, order.WorkerCount*2)
+
+	for i := 1; i <= order.WorkerCount; i++ {
+		wg.Add(1)
+		go downloadWorker(downloads, &wg)
+	}
+
+	for _, survey := range order.Prefixes {
+		var fileDownloadPageSize int32 = 100
 
 		params := &s3.ListObjectsV2Input{
-			Bucket:  aws.String(manifest.Bucket),
+			Bucket:  aws.String(order.Bucket),
 			Prefix:  aws.String(survey),
 			MaxKeys: aws.Int32(fileDownloadPageSize),
 		}
 
-		filePaginator := s3.NewListObjectsV2Paginator(&manifest.Client, params)
+		filePaginator := s3.NewListObjectsV2Paginator(&order.Client, params)
 		for filePaginator.HasMorePages() {
 			page, err := filePaginator.NextPage(context.TODO())
 			if err != nil {
 				return err
 			}
 
-			var wg sync.WaitGroup
 			for _, object := range page.Contents {
-				wg.Add(1)
-				go downloadLargeObject(manifest.Bucket, *object.Key, manifest.Client, path.Join(manifest.TargetDir, *object.Key), &wg)
+				downloads <- Download{
+					Bucket:     order.Bucket,
+					ObjectKey:  *object.Key,
+					Client:     order.Client,
+					TargetFile: path.Join(order.TargetDir, *object.Key),
+					WaitGroup:  &wg,
+				}
 			}
-			wg.Wait()
 		}
 		fmt.Println("files downloaded.")
 	}
+
+	close(downloads)
+	wg.Wait()
+
 	return nil
 }
 
-func downloadLargeObject(bucket string, objectKey string, client s3.Client, targetFile string, wg *sync.WaitGroup) {
+func downloadWorker(requests <-chan Download, wg *sync.WaitGroup) {
 	defer wg.Done()
-	//fmt.Printf("Downloading %s to %s...\n", objectKey, bucket)
+	for request := range requests {
+		downloadLargeObject(request.Bucket, request.ObjectKey, request.Client, request.TargetFile)
+	}
+}
 
+func downloadLargeObject(bucket string, objectKey string, client s3.Client, targetFile string) {
 	file, err := createFileWithParents(targetFile)
 	if err != nil {
 		log.Fatal(err)

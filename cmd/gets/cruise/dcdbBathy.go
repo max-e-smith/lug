@@ -90,9 +90,9 @@ func (request *MultibeamRequest) ResolveSurveys() {
 					}
 
 				}
+
 				if wantedSurveys == foundSurveys {
-					// short circuit when enough surveys are found
-					fmt.Printf("setting request prefixes to found surveys: %s\n", strings.Join(surveyPaths, ","))
+					// all surveys are found
 					request.Prefixes = surveyPaths
 					return
 				}
@@ -108,6 +108,16 @@ func (request *MultibeamRequest) ResolveSurveys() {
 
 	}
 	return
+}
+
+func isSurveyMatch(surveys []string, resolvedSurvey string) bool {
+	for _, survey := range surveys {
+		if survey == resolvedSurvey {
+			fmt.Println("Found matching survey: ", survey)
+			return true
+		}
+	}
+	return false
 }
 
 func (request *MultibeamRequest) CheckDiskAvailability() {
@@ -150,14 +160,4 @@ func (request *MultibeamRequest) DownloadSurveys() {
 	}
 
 	return
-}
-
-func isSurveyMatch(surveys []string, resolvedSurvey string) bool {
-	for _, survey := range surveys {
-		if survey == resolvedSurvey {
-			fmt.Println("Found matching survey: ", survey)
-			return true
-		}
-	}
-	return false
 }

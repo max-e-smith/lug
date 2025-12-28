@@ -39,7 +39,7 @@ var cruiseCmd = &cobra.Command{
 					Surveys:     surveys,
 					S3Client:    s3client,
 					TargetDir:   targetPath,
-					WorkerCount: 0,
+					WorkerCount: 5,
 				},
 			)
 		}
