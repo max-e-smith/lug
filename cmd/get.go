@@ -2,7 +2,11 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"log"
 )
+
+var parallelDownloads int
 
 var GetCmd = &cobra.Command{
 	Use:   "get",
@@ -20,4 +24,9 @@ var GetCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(GetCmd)
+	GetCmd.PersistentFlags().IntVarP(&parallelDownloads, "parallel-downloads", "p", 3, "Number of parallel downloads")
+	err := viper.BindPFlag("parallel-downloads", GetCmd.PersistentFlags().Lookup("parallel-downloads"))
+	if err != nil {
+		log.Fatal(err)
+	}
 }

@@ -58,6 +58,7 @@ func (order Order) DownloadFiles() error {
 	var wg sync.WaitGroup
 	downloads := make(chan Download, order.WorkerCount*2)
 
+	fmt.Printf("Starting %d workers\n", order.WorkerCount)
 	for i := 1; i <= order.WorkerCount; i++ {
 		wg.Add(1)
 		go downloadWorker(downloads, &wg)

@@ -11,6 +11,7 @@ import (
 	"github.com/max-e-smith/cruise-lug/cmd/common"
 	"github.com/max-e-smith/cruise-lug/cmd/gets/cruise"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
 )
 
@@ -32,6 +33,7 @@ var cruiseCmd = &cobra.Command{
 		have the necessary permissions.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		targetPath, surveys := parseArgs(cmd, args)
+		parallelDownloads := getWorkersConfig()
 
 		if multibeam {
 			requestMultibeamDownload(
@@ -39,7 +41,7 @@ var cruiseCmd = &cobra.Command{
 					Surveys:     surveys,
 					S3Client:    s3client,
 					TargetDir:   targetPath,
-					WorkerCount: 5,
+					WorkerCount: parallelDownloads,
 				},
 			)
 		}
@@ -56,6 +58,17 @@ var cruiseCmd = &cobra.Command{
 		fmt.Println("Done.")
 		return
 	},
+}
+
+func getWorkersConfig() int {
+	numWorkers := viper.GetInt("parallel-downloads")
+	if numWorkers < 1 {
+		return 1
+	}
+	if numWorkers > 100 {
+		return 100
+	}
+	return numWorkers
 }
 
 func init() {
