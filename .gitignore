@@ -8,6 +8,10 @@
 *.so
 *.dylib
 
+# build dirs
+/bin/
+/test/smoke/*
+
 # Test binary, built with `go test -c`
 *.test
 
