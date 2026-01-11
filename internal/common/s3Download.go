@@ -32,29 +32,6 @@ type Download struct {
 	WaitGroup  *sync.WaitGroup
 }
 
-func GetDiskUsageEstimate(bucket string, s3client s3.Client, rootPaths []string) (int64, error) {
-	var totalSurveysSize int64 = 0
-
-	for _, surveyRootPath := range rootPaths {
-		fmt.Printf("Getting disk usage estimate for s3 files on %s at %s\n", bucket, surveyRootPath)
-		// TODO paginate
-		result, err := s3client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
-			Bucket: aws.String(bucket),
-			Prefix: aws.String(surveyRootPath),
-		})
-		if err != nil {
-			return totalSurveysSize, err
-		}
-
-		for _, object := range result.Contents {
-			//log.Printf("key=%s size=%d", aws.ToString(object.Key), *object.Size)
-			totalSurveysSize = totalSurveysSize + *object.Size
-		}
-	}
-
-	return totalSurveysSize, nil
-}
-
 func (order Order) DownloadFiles() error {
 	fmt.Printf("Downloading files to: %s\n", order.TargetDir)
 	spin = spinner.New(spinner.CharSets[24], 100*time.Millisecond)
@@ -113,12 +90,12 @@ func downloadWorker(requests <-chan Download, wg *sync.WaitGroup) {
 }
 
 func downloadLargeObject(bucket string, objectKey string, client s3.Client, targetFile string) {
-	file, err := createFileWithParents(targetFile)
+	file, err := CreateTargetFileWithParents(targetFile)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
-	defer closeFileChecked(file)
+	defer CloseFileChecked(file)
 
 	start := time.Now()
 

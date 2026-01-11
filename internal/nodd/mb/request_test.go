@@ -1,6 +1,8 @@
-package dcdb
+package mb
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMultibeamRequest_CheckDiskAvailability(t *testing.T) {
 	// TODO

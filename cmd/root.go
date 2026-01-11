@@ -7,9 +7,11 @@ import (
 	"os"
 )
 
-var Verbose bool
+var verbose bool
+var check bool
+var parallel int
 
-var rootCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:   "clug",
 	Short: "A simple retrieval tool for ocean datasets hosted by the NODD",
 	Long: `A CLI library for downloading ocean (bathymetry, trackline, and water column)
@@ -28,16 +30,32 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	err := rootCmd.Execute()
+	err := RootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Display more verbose output in console output. (default: false)")
-	err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
-	if err != nil {
-		log.Fatal(err)
+	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Display more verbose output in console output. (default: false)")
+	RootCmd.PersistentFlags().IntVarP(&parallel, "parallel", "p", 3, "Number of parallel downloads. (default: 3, max: 100)")
+	RootCmd.PersistentFlags().BoolVarP(&check, "check", "c", true, "Check local disk space before downloading. (default: true)")
+
+	RootCmd.PersistentFlags().String("source", "s", "A help for foo")
+
+	vErr := viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose"))
+	if vErr != nil {
+		log.Fatal(vErr)
 	}
+
+	pErr := viper.BindPFlag("parallel", RootCmd.PersistentFlags().Lookup("parallel"))
+	if pErr != nil {
+		log.Fatal(pErr)
+	}
+
+	cErr := viper.BindPFlag("check", RootCmd.PersistentFlags().Lookup("check"))
+	if cErr != nil {
+		log.Fatal(cErr)
+	}
+
 }

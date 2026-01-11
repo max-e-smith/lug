@@ -1,4 +1,4 @@
-package dcdb
+package mb
 
 import (
 	"context"
@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/max-e-smith/cruise-lug/cmd/common"
+	"github.com/max-e-smith/cruise-lug/internal/common"
+	"log"
 	"path"
 	"strings"
 	"time"
@@ -23,11 +24,22 @@ type MultibeamRequest struct {
 	Error       error
 }
 
+func RequestMultibeamDownload(request MultibeamRequest) {
+
+	request.resolveSurveys()
+	request.checkDiskAvailability()
+	request.downloadSurveys()
+
+	if request.Error != nil {
+		log.Fatal(request.Error)
+	}
+}
+
 func logDownloadTime(start time.Time) {
 	fmt.Printf("Download completed in %g hours.\n", common.HoursSince(start))
 }
 
-func (request *MultibeamRequest) ResolveSurveys() {
+func (request *MultibeamRequest) resolveSurveys() {
 	fmt.Println("Resolving bathymetry data for specified surveys: ", request.Surveys)
 	var surveyPaths []string
 	wantedSurveys := len(request.Surveys)
@@ -120,7 +132,7 @@ func isSurveyMatch(surveys []string, resolvedSurvey string) bool {
 	return false
 }
 
-func (request *MultibeamRequest) CheckDiskAvailability() {
+func (request *MultibeamRequest) checkDiskAvailability() {
 	if request.Error != nil || len(request.Prefixes) == 0 {
 		return
 	}
@@ -139,7 +151,7 @@ func (request *MultibeamRequest) CheckDiskAvailability() {
 	return
 }
 
-func (request *MultibeamRequest) DownloadSurveys() {
+func (request *MultibeamRequest) downloadSurveys() {
 	if request.Error != nil || len(request.Prefixes) == 0 {
 		return
 	}
