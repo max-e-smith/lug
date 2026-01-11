@@ -40,7 +40,7 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Display more verbose output in console output. (default: false)")
 	RootCmd.PersistentFlags().IntVarP(&parallel, "parallel", "p", 3, "Number of parallel downloads. (default: 3, max: 100)")
-	RootCmd.PersistentFlags().BoolVarP(&check, "check", "c", true, "Check local disk space before downloading. (default: true)")
+	RootCmd.PersistentFlags().BoolVarP(&check, "check", "c", false, "Check local disk space before downloading. (default: true)")
 
 	RootCmd.PersistentFlags().String("source", "s", "A help for foo")
 

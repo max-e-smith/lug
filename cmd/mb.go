@@ -71,7 +71,7 @@ func init() {
 }
 
 func getWorkersConfig() int {
-	numWorkers := viper.GetInt("parallel-downloads")
+	numWorkers := viper.GetInt("parallel")
 	if numWorkers < 1 {
 		return 1
 	}

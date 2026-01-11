@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/max-e-smith/cruise-lug/internal/common"
+	"github.com/spf13/viper"
 	"log"
 	"time"
 )
@@ -24,7 +25,12 @@ func (request *MultibeamRequest) checkDiskAvailability() {
 	if request.Error != nil || len(request.Prefixes) == 0 {
 		return
 	}
-	// TODO get viper check config and return if false
+
+	checkDisk := viper.GetBool("check")
+	if !checkDisk {
+		fmt.Println("Skipping disk space check.")
+		return
+	}
 
 	bytes, estimateErr := common.GetDiskUsageEstimate(multibeamNODDBucket, request.S3Client, request.Prefixes)
 	if estimateErr != nil {
