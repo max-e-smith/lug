@@ -1,11 +1,47 @@
-main_package_path = ./cmd
-binary_package_path = ./bin
-binary_name = nodd-lug
-test_package_path = ./test
+default: help
+
+PROJECT_NAME = $(shell basename "$(PWD)")
+BIN_PATH = ./bin
+CMD_PATH = ./cmd
+TST_PATH = ./test
+
+# =====
+# BUILD
+
+# remove unused dependencies
+.PHONY: tidy
+tidy:
+	go mod tidy
+
+# build binary on current
+.PHONY: build
+build:
+	go build -o bin/cruise-lug
+
+# build and install for local use
+.PHONY: install
+install:
+	go install
+
+# build binaries for different os and platforms
+.PHONY: compile
+compile:
+	# linux
+	GOOS=linux GOARCH=arm go build -o ${BIN_PATH}/${PROJECT_NAME}-arm
+	GOOS=linux GOARCH=arm64 go build -o ${BIN_PATH}/${PROJECT_NAME}-arm64
+	# macos
+	GOARCH=arm GOOS=darwin go build -o ${BIN_PATH}/${PROJECT_NAME}-arm-darwin
+	GOARCH=amd64 GOOS=darwin go build -o ${BIN_PATH}/${PROJECT_NAME}-amd64-darwin
+	# windows
+	GOARCH=amd64 GOOS=windows go build -o ${BIN_PATH}/${PROJECT_NAME}-windows.exe
+
+# clean the workspace
+.PHONY: clean
+clean:
+	rm -rf ${BIN_PATH}
 
 # ====
 # TEST
-# ====
 
 .PHONY: test
 test:
@@ -20,36 +56,10 @@ it:
 smoke:
 	go run main.go get cruise AT43-02 .test/smoke/testd -mv -p=8
 
-
-# ====
-# BILD
-# ====
-
-.PHONY: tidy
-tidy:
-	echo "TODO tidy"
-
-# clean the workspace
-.PHONY: clean
-clean:
-	echo "TODO clean"
-
-# build the binary
-.PHONY: build
-build:
-	go build -o bin/nodd-lug
-
-# build and install the nodd-lug for local use
-.PHONY: install
-install:
-	go install
-
-
 # ====
 # DIST
-# ====
 
-# check dependencies for vulnerabilities
+## dep-check: check dependencies for vulnerabilities
 .PHONY: dep-check
 dep-check:
 	echo "TODO dep-check"
@@ -58,3 +68,16 @@ dep-check:
 .PHONY: publish
 publish: it
 	echo "TODO publish"
+
+
+# =====
+# USAGE
+
+# get help
+.PHONY: help
+help: Makefile
+	@echo
+	@echo " Choose a command run in "$(PROJECT_NAME)":"
+	@echo
+	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
+	@echo
