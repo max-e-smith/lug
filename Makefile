@@ -8,22 +8,17 @@ TST_PATH = ./test
 # =====
 # BUILD
 
-# remove unused dependencies
-.PHONY: tidy
-tidy:
-	go mod tidy
-
-# build binary on current
+## build: build binary on current platform
 .PHONY: build
 build:
 	go build -o bin/cruise-lug
 
-# build and install for local use
+## install: install cli for local use
 .PHONY: install
 install:
 	go install
 
-# build binaries for different os and platforms
+## build: build binaries for different os and platforms
 .PHONY: compile
 compile:
 	# linux
@@ -35,10 +30,13 @@ compile:
 	# windows
 	GOARCH=amd64 GOOS=windows go build -o ${BIN_PATH}/${PROJECT_NAME}-windows.exe
 
-# clean the workspace
+## clean: clean the workspace and code
 .PHONY: clean
 clean:
 	rm -rf ${BIN_PATH}
+	go vet
+	go fmt
+	go mod tidy
 
 # ====
 # TEST
